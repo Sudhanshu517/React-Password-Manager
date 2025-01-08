@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*{
+    margin: 0;
+    padding: 0;
+}
+
+/* @layer components {
+    .mycontainer {
+      @apply flex justify-center  w-3/4 px-40 py-20;
+    }
+  } */
+
+  @layer components {
+    .mycontainer {
+      @apply container px-40 py-10 mx-auto w-3/4 ;
+    }
+  }
