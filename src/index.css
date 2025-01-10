@@ -5,13 +5,19 @@
 *{
     margin: 0;
     padding: 0;
+  }
+  body{
+  font-size: 15px
+
 }
 
-/* @layer components {
-    .mycontainer {
-      @apply flex justify-center  w-3/4 px-40 py-20;
-    }
-  } */
+@media only screen and (max-width: 500px) {
+  body {
+   font-size:12px;
+  }
+} 
+
+
 
   @layer components {
     .mycontainer {
