@@ -63,7 +63,7 @@ const Manager = () => {
         autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: false,
-        pauseOnHover: true,
+        pauseOnHover: false,
         draggable: true,
         progress: undefined,
         theme: "dark",
@@ -79,7 +79,7 @@ const Manager = () => {
             autoClose: 5000,
             hideProgressBar: false,
             closeOnClick: true,
-            pauseOnHover: true,
+            pauseOnHover: false,
             draggable: true,
             theme: "dark",
           }
@@ -109,7 +109,7 @@ const Manager = () => {
       autoClose: 5000,
       hideProgressBar: false,
       closeOnClick: false,
-      pauseOnHover: true,
+      pauseOnHover: false,
       draggable: true,
       progress: undefined,
       theme: "dark",
@@ -139,7 +139,7 @@ const Manager = () => {
       autoClose: 5000,
       hideProgressBar: false,
       closeOnClick: false,
-      pauseOnHover: true,
+      pauseOnHover: false,
       draggable: true,
       progress: undefined,
       theme: "dark",
@@ -171,20 +171,20 @@ const Manager = () => {
       <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"><div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-green-600 opacity-20 blur-[100px]"></div></div>
 
 
-      <div className="mx-auto md:container px-4 w-3/4 flex-col text-center flex gap-4 md:gap-0" >
-        <h1 className="font-bold text-3xl text-center mt-4 md:mt-0"> 
+      <div className="mx-auto md:container px-4 md:w-3/4 w-[85%] flex-col text-center flex gap-4 md:gap-0" >
+        <h1 className="font-bold text-3xl text-center mt-4 md:mt-5 "> 
           <span className="text-green-500">&lt;</span>
           <span>Pass</span>
           <span className="text-green-500">OP/&gt;</span>
         </h1>
         <p>Your own Password Manager</p>
 
-        <input name="site" value={form.site} onChange={handleChange} placeholder="Enter website URL" className={`w-full rounded-full mx-auto py-1.5 px-2 border border-green-500 mt-3 md:mb-5`} type="text" />
+        <input name="site" value={form.site} onChange={handleChange} placeholder="Enter website URL" className={`md:w-[71.5%] rounded-full mx-auto py-1.5 px-2 border border-green-500 mt-3 md:mb-5 w-full`} type="text" />
 
 
 
-        <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-5">
-          <input name="username" value={form.username} onChange={handleChange} placeholder="Enter Username" className=" w-full rounded-full py-1.5 px-2 border border-green-500" type="text" />
+        <div className="flex flex-col md:flex-row justify-center gap-3 md:gap-5">
+          <input name="username" value={form.username} onChange={handleChange} placeholder="Enter Username" className=" w-full rounded-full md:w-[50%] py-1.5 px-2 border border-green-500" type="text" />
           <div className="relative">
 
             <input ref={passwordRef} name="password" value={form.password} onChange={handleChange} placeholder="Enter Password" className=" w-full rounded-full py-1.5 px-2 border border-green-500" type="password" />
@@ -203,7 +203,7 @@ const Manager = () => {
 
         </button>
       </div>
-      <h2 className="md:ml-32 font-bold text-2xl mb-2 ml-[5%]">Your Passwords</h2>
+      <h2 className="md:ml-[16%] font-bold text-2xl mb-2 ml-[10%]">Your Passwords</h2>
       <div className="flex justify-center text-center container m-auto">
         {passwordArray.length == 0 && <div>No passwords to display</div>}
         {passwordArray.length != 0 &&
