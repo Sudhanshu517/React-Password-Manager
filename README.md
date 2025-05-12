@@ -1,4 +1,4 @@
-# 🔐 PassOP – Password Manager (React)
+# 🔐 PassOP – Password Manager (React Password Manager)
 
 A sleek, modern password manager built using **React**.  
 This repo contains two versions:
@@ -34,7 +34,7 @@ This repo contains two versions:
 Clone the repo:
 
 ```bash
-git clone [https://github.com/yourusername/passop.git](https://github.com/Sudhanshu517/React-Password-Manager/)
+git clone https://github.com/Sudhanshu517/React-Password-Manager
 cd passop
 ```
 
