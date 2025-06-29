@@ -3,8 +3,23 @@ import { useRef, useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import 'react-toastify/dist/ReactToastify.css';
+import CryptoJS from 'crypto-js';
+// import { decrypt } from 'dotenv';
+import { useAuth } from "../AuthContext"; // ✅ import
 
+
+
+const secretKey = "my-hardcoded-secret";
 const Manager = () => {
+    const { user } = useAuth(); // 🔒 Who's logged in
+    if (!user) {
+        return (
+            <div className="flex flex-col justify-center items-center min-h-screen">
+                <h2 className="text-2xl font-bold text-red-600">🔒 Access Denied</h2>
+                <p className="text-gray-700 mt-2">Please log in to manage your passwords.</p>
+            </div>
+        );
+    }
     const ref = useRef()
     const passwordRef = useRef()
     const [form, setform] = useState({ site: "", username: "", password: "" })
@@ -34,6 +49,9 @@ const Manager = () => {
             theme: "dark",
         });
         navigator.clipboard.writeText(text)
+        // const decrypted = CryptoJS.AES.decrypt(text, secretKey).toString(CryptoJS.enc.Utf8);
+        // navigator.clipboard.writeText(decrypted);
+
     }
 
     const showPassword = () => {
@@ -49,20 +67,59 @@ const Manager = () => {
         }
 
     }
-   const isStrongPassword = (password) => {
-    const minLength = 8;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
-    return password.length >= minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
-};
+    const isStrongPassword = (password) => {
+        const minLength = 8;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+        return password.length >= minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+    };
 
-const savePassword = async () => {
-    if (form.site.length > 3 && form.username.length > 3 && form.password.length > 3) {
+    const savePassword = async () => {
+        if (!user) {
+            toast.error("You must be logged in to perform this action.");
+            return;
+        }
+        if (form.site.length > 3 && form.username.length > 3 && form.password.length > 3) {
 
-        if (!isStrongPassword(form.password)) {
-            toast.error('Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.', {
+            if (!isStrongPassword(form.password)) {
+                toast.error('Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.', {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                });
+                return;
+            }
+
+            // If any such id exists in the db, delete it 
+            await fetch("http://localhost:3000/", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: form.id })
+            });
+
+            // const newPassword = { ...form, id: uuidv4() };
+
+            const encryptedPassword = CryptoJS.AES.encrypt(form.password, secretKey).toString();
+
+            const newPassword = { ...form, password: encryptedPassword, id: uuidv4() };
+            setPasswordArray([...passwordArray, newPassword]);
+
+            await fetch("http://localhost:3000/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newPassword)
+            });
+
+            setform({ site: "", username: "", password: "" });
+
+            toast.success('Password saved!', {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -72,59 +129,32 @@ const savePassword = async () => {
                 progress: undefined,
                 theme: "dark",
             });
-            return;
+        } else {
+            toast.error('Error: All fields must be filled properly!', {
+                position: "top-right",
+                autoClose: 5000,
+                theme: "dark",
+            });
         }
-
-        // If any such id exists in the db, delete it 
-        await fetch("http://localhost:3000/", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: form.id })
-        });
-
-        const newPassword = { ...form, id: uuidv4() };
-        setPasswordArray([...passwordArray, newPassword]);
-
-        await fetch("http://localhost:3000/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newPassword)
-        });
-
-        setform({ site: "", username: "", password: "" });
-
-        toast.success('Password saved!', {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "dark",
-        });
-    } else {
-        toast.error('Error: All fields must be filled properly!', {
-            position: "top-right",
-            autoClose: 5000,
-            theme: "dark",
-        });
-    }
-};
+    };
 
     const deletePassword = async (id) => {
+        if (!user) {
+            toast.error("You must be logged in to perform this action.");
+            return;
+        }
         console.log("Deleting password with id ", id)
         let c = confirm("Do you really want to delete this password?")
         if (c) {
             setPasswordArray(passwordArray.filter(item => item.id !== id))
-            
+
             await fetch("http://localhost:3000/", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) })
 
             toast('Password Deleted!', {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
-                closeOnClick: true, 
+                closeOnClick: true,
                 draggable: true,
                 progress: undefined,
                 theme: "dark",
@@ -134,6 +164,10 @@ const savePassword = async () => {
     }
 
     const editPassword = (id) => {
+        if (!user) {
+            toast.error("You must be logged in to perform this action.");
+            return;
+        }
         setform({ ...passwordArray.filter(i => i.id === id)[0], id: id })
         setPasswordArray(passwordArray.filter(item => item.id !== id))
     }
@@ -142,8 +176,9 @@ const savePassword = async () => {
     const handleChange = (e) => {
         setform({ ...form, [e.target.name]: e.target.value })
     }
+    
 
-
+    // If user is logged in, return the rest of the UI
     return (
         <>
             <ToastContainer />
@@ -156,7 +191,11 @@ const savePassword = async () => {
 
                 </h1>
                 <p className='text-green-900 text-lg text-center'>Your own Password Manager</p>
-
+                {user && (
+                    <p className="text-green-700 text-sm text-center mt-2">
+                        Logged in as: <strong>{user.displayName || user.email}</strong>
+                    </p>
+                )}
                 <div className="flex flex-col p-4 text-black gap-8 items-center">
                     <input value={form.site} onChange={handleChange} placeholder='Enter website URL' className='rounded-full border border-green-500 w-full p-4 py-1' type="text" name="site" id="site" />
                     <div className="flex flex-col md:flex-row w-full justify-between gap-8">
@@ -191,15 +230,16 @@ const savePassword = async () => {
                         </thead>
                         <tbody className='bg-green-100'>
                             {passwordArray.map((item, index) => {
+                                const decryptedPassword = CryptoJS.AES.decrypt(item.password, secretKey).toString(CryptoJS.enc.Utf8);
                                 return <tr key={index}>
                                     <td className='py-2 border border-white text-center'>
                                         <div className='flex items-center justify-center '>
                                             <a href={item.site} target='_blank'>{item.site}</a>
-                                            <div className='lordiconcopy size-7 cursor-pointer' onClick={() => { copyText(item.site) }}>
+                                            <div className='lordiconcopy size-7 cursor-pointer' onClick={() => copyText(decryptedPassword)}>
                                                 <lord-icon
-                                                    style={{ "width": "25px", "height": "25px", "paddingTop": "3px", "paddingLeft": "3px" }}
+                                                    style={{ width: "25px", height: "25px", paddingTop: "3px", paddingLeft: "3px" }}
                                                     src="https://cdn.lordicon.com/iykgtsbt.json"
-                                                    trigger="hover" >
+                                                    trigger="hover">
                                                 </lord-icon>
                                             </div>
                                         </div>
@@ -207,23 +247,26 @@ const savePassword = async () => {
                                     <td className='py-2 border border-white text-center'>
                                         <div className='flex items-center justify-center '>
                                             <span>{item.username}</span>
-                                            <div className='lordiconcopy size-7 cursor-pointer' onClick={() => { copyText(item.username) }}>
+                                            <div className='lordiconcopy size-7 cursor-pointer' onClick={() => copyText(decryptedPassword)}>
                                                 <lord-icon
-                                                    style={{ "width": "25px", "height": "25px", "paddingTop": "3px", "paddingLeft": "3px" }}
+                                                    style={{ width: "25px", height: "25px", paddingTop: "3px", paddingLeft: "3px" }}
                                                     src="https://cdn.lordicon.com/iykgtsbt.json"
-                                                    trigger="hover" >
+                                                    trigger="hover">
                                                 </lord-icon>
                                             </div>
                                         </div>
                                     </td>
                                     <td className='py-2 border border-white text-center'>
                                         <div className='flex items-center justify-center '>
-                                            <span>{"*".repeat(item.password.length)}</span>
-                                            <div className='lordiconcopy size-7 cursor-pointer' onClick={() => { copyText(item.password) }}>
+                                            {/* <span>{"*".repeat(item.password.length)}</span>
+                                            const bytes = CryptoJS.AES.decrypt(item.password, secretKey);
+                                            const decrypted = bytes.toString(CryptoJS.enc.Utf8); */}
+                                            <span>{decryptedPassword}</span>
+                                            <div className='lordiconcopy size-7 cursor-pointer' onClick={() => copyText(decryptedPassword)}>
                                                 <lord-icon
-                                                    style={{ "width": "25px", "height": "25px", "paddingTop": "3px", "paddingLeft": "3px" }}
+                                                    style={{ width: "25px", height: "25px", paddingTop: "3px", paddingLeft: "3px" }}
                                                     src="https://cdn.lordicon.com/iykgtsbt.json"
-                                                    trigger="hover" >
+                                                    trigger="hover">
                                                 </lord-icon>
                                             </div>
                                         </div>
